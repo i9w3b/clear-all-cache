@@ -12,22 +12,24 @@ class ClearAllCacheCommand extends Command
 
     public function handle()
     {
-        
-        $content = file_get_contents(base_path('composer.json'));
-        $content = json_decode($content,true);
-
         $this->call('config:clear');
         $this->call('route:clear');
         $this->call('view:clear');
         $this->call('cache:clear');
         $this->call('optimize:clear');
-       
-        foreach ($content['require-dev'] as $key => $value) {
-            if ($key === 'barryvdh/laravel-debugbar') {
+        $this->terminalCommand();
+    }
+
+    public function terminalCommand()
+    {
+        $output = shell_exec('cd ' . base_path() . ' && composer show --format=json');
+        $dependencies = json_decode($output, true)['installed'];
+        foreach ($dependencies as $composer) {
+            if ($composer['name'] === 'barryvdh/laravel-debugbar') {
                 $this->call('debugbar:clear');
             }
         }
-
         system('composer dump-autoload');
     }
 }
+
